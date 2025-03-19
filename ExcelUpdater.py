@@ -6,21 +6,21 @@ from win32com.client import Dispatch
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
 
-programma_in_esecuzione = False
+programma_in_esecuzione = False #stato del programma all'avvio
 
 def aggiorna_excel():
     try:
-        file_path = entry_file.get()
+        file_path = entry_file.get() #richiesta di input daparte dell'utente, per il path(percorso) del file
         
-        excel = Dispatch("Excel.Application")
-        excel.Visible = True
-        wb = excel.Workbooks.Open(os.path.abspath(file_path))
+        excel = Dispatch("Excel.Application") #dichiaro una variabile di nome excel prendendo tramite win32com il processo di excel
+        excel.Visible = True #durante l'aggiornamento del programma, excel rimane aperto
+        wb = excel.Workbooks.Open(os.path.abspath(file_path))#variabile per salvare excel come workbook
 
-        wb.Save()
-        log_message(f"File aperto aggiornato con successo alle {time.strftime('%H:%M:%S')}")
+        wb.Save() #salvataggio excel
+        log_message(f"File aperto aggiornato con successo alle {time.strftime('%H:%M:%S')}")#messaggio log di successo
         
-    except Exception as e:
-        log_message(f"Errore win32com: {str(e)}")
+    except Exception as e: #in caso di errore, esso viene salvato come e
+        log_message(f"Errore win32com: {str(e)}") #manda il mesaggio contenente l'errore
 
 def avvia_programma():
     global programma_in_esecuzione
@@ -47,6 +47,7 @@ def log_message(message):
 
 root = tk.Tk()
 root.title("Excel Updater")
+root.iconbitmap("icona.ico")
 
 frame_input = ttk.Frame(root)
 frame_input.pack(padx=10, pady=10)
