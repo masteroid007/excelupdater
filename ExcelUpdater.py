@@ -20,12 +20,12 @@ def aggiornamento_stato_led(color, text):
     
 
     highlight_color = 'white' if color == 'green' else '#ffcccc'
-    led_canvas.itemconfig(led_highlight, fill=highlight_color)            
+    led_canvas.itemconfig(led_highlight, fill=highlight_color)             #costante per l'aggiornamento del led
 
 def file_browse():
     file = fd.askopenfilename(filetype=[("File Excel"), "*.xls *.xlsx"])
     entry_file.delete(0, TK.END)
-    entry_file.insert(0, file)
+    entry_file.insert(0, file) #tasto per selezionare il file tramite explorer
 
 def aggiorna_excel():
     try:
@@ -39,7 +39,7 @@ def aggiorna_excel():
         log_message(f"File aperto aggiornato con successo alle {time.strftime('%H:%M:%S')}")#messaggio log di successo
         
     except Exception as e: #in caso di errore, esso viene salvato come e
-        log_message(f"Errore win32com: {str(e)}") #manda il mesaggio contenente l'errore
+        log_message(f"Errore win32com: {str(e)}") #manda il mesaggio contenente l'errore #costante per aggiornare e tenere salvato excel
 
 def avvia_programma():
     global programma_in_esecuzione
@@ -50,7 +50,7 @@ def avvia_programma():
         update_led_state('green', 'In esecuzione')
         programma_in_esecuzione = True
     except ValueError:
-        log_message("Errore: inserisci un numero valido per il tempo di aggiornamento.")
+        log_message("Errore: inserisci un numero valido per il tempo di aggiornamento.") #costante per l'avvio del prgramma<
 
 def interrompi_programma():
     global programma_in_esecuzione
@@ -60,11 +60,13 @@ def interrompi_programma():
         update_led_state('red', 'Fermo')
         programma_in_esecuzione = False
     else:
-        log_message("Nessun programma in esecuzione.")
+        log_message("Nessun programma in esecuzione.") #costante per l'interruzione del programma
 
 def log_message(message):
     console_log.insert(tk.END, message + "\n")
-    console_log.see(tk.END)  
+    console_log.see(tk.END)   # costante per il log dei mess nella console
+
+#sezione grafica del programma
 
 root = tk.Tk()
 root.title("Excel Updater")
@@ -106,7 +108,7 @@ frame_status.pack(pady=5)
 
 
 led_canvas = tk.Canvas(frame_status, width=30, height=30, bg='white', bd=0, highlightthickness=0)
-led_canvas.grid(row=0, column=0, padx=5)
+led_canvas.grid(row=0, column=2, padx=5)
 
 
 led = led_canvas.create_oval(5, 5, 25, 25, fill='red', outline='')
@@ -114,7 +116,7 @@ led_highlight = led_canvas.create_oval(8, 8, 18, 18, fill='white', alpha=0.3)
 
 
 status_label = ttk.Label(frame_status, text="Stato: Fermo")
-status_label.grid(row=0, column=1, padx=5)
+status_label.grid(row=0, column=3, padx=5)
 
 def mainloop():
     while True:
