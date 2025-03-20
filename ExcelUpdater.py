@@ -4,9 +4,18 @@ from openpyxl import load_workbook
 import os
 from win32com.client import Dispatch
 import tkinter as tk
-from tkinter import ttk, scrolledtext, messagebox
+from tkinter import ttk, scrolledtext, 
+from tkinter import filedialog as fd
+
 
 programma_in_esecuzione = False #stato del programma all'avvio
+
+            
+
+def file_browse():
+    file = fd.askopenfilename(filetype=[("Excel Files"), "*.xls *.xlsx"])
+    entry_file.delete(0, TK.END)
+    entry_file.insert(0, file)
 
 def aggiorna_excel():
     try:
@@ -56,6 +65,9 @@ label_file = ttk.Label(frame_input, text="Percorso del file Excel:")
 label_file.grid(row=0, column=0, sticky=tk.W)
 entry_file = ttk.Entry(frame_input, width=50)
 entry_file.grid(row=0, column=1, padx=5, pady=5)
+
+ttk.Button(frame_input, text="Sfoglia File", command=browse_file).grid(row=0, column=2, padx=5)
+
 
 label_tempo = ttk.Label(frame_input, text="Tempo di aggiornamento (secondi):")
 label_tempo.grid(row=1, column=0, sticky=tk.W)
