@@ -10,6 +10,10 @@ from tkinter import filedialog as fd
 
 programma_in_esecuzione = False #stato del programma all'avvio
 
+def status():
+    global programma_in_esecuzione
+    try:
+        if(programma_in_esecuzione == True):
             
 
 def file_browse():
