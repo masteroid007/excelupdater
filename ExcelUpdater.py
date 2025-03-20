@@ -10,14 +10,20 @@ from tkinter import filedialog as fd
 
 programma_in_esecuzione = False #stato del programma all'avvio
 
-def status():
-    global programma_in_esecuzione
-    try:
-        if(programma_in_esecuzione == True):
-            
+def aggiornamento_stato_led(color, text):
+
+    led_canvas.itemconfig(led, fill=color)
+    
+
+    status_text = f"Stato: {text}"
+    status_label.config(text=status_text)
+    
+
+    highlight_color = 'white' if color == 'green' else '#ffcccc'
+    led_canvas.itemconfig(led_highlight, fill=highlight_color)            
 
 def file_browse():
-    file = fd.askopenfilename(filetype=[("Excel Files"), "*.xls *.xlsx"])
+    file = fd.askopenfilename(filetype=[("File Excel"), "*.xls *.xlsx"])
     entry_file.delete(0, TK.END)
     entry_file.insert(0, file)
 
@@ -40,8 +46,9 @@ def avvia_programma():
     try:
         tempo_aggiornamento = int(entry_tempo.get())
         schedule.every(tempo_aggiornamento).seconds.do(aggiorna_excel)
-        programma_in_esecuzione = True
         log_message(f"Programma avviato con aggiornamento ogni {tempo_aggiornamento} secondi.")
+        update_led_state('green', 'In esecuzione')
+        programma_in_esecuzione = True
     except ValueError:
         log_message("Errore: inserisci un numero valido per il tempo di aggiornamento.")
 
@@ -49,8 +56,9 @@ def interrompi_programma():
     global programma_in_esecuzione
     if programma_in_esecuzione:
         schedule.clear()  
-        programma_in_esecuzione = False
         log_message("Programma interrotto.")
+        update_led_state('red', 'Fermo')
+        programma_in_esecuzione = False
     else:
         log_message("Nessun programma in esecuzione.")
 
@@ -92,6 +100,21 @@ label_log.pack(anchor=tk.W)
 
 console_log = scrolledtext.ScrolledText(frame_log, width=60, height=15, state='normal')
 console_log.pack(fill=tk.BOTH, expand=True)
+
+frame_status = ttk.Frame(root)
+frame_status.pack(pady=5)
+
+
+led_canvas = tk.Canvas(frame_status, width=30, height=30, bg='white', bd=0, highlightthickness=0)
+led_canvas.grid(row=0, column=0, padx=5)
+
+
+led = led_canvas.create_oval(5, 5, 25, 25, fill='red', outline='')
+led_highlight = led_canvas.create_oval(8, 8, 18, 18, fill='white', alpha=0.3)
+
+
+status_label = ttk.Label(frame_status, text="Stato: Fermo")
+status_label.grid(row=0, column=1, padx=5)
 
 def mainloop():
     while True:
