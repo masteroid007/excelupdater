@@ -4,9 +4,10 @@ from openpyxl import load_workbook
 import os
 from win32com.client import Dispatch
 import tkinter as tk
-from tkinter import ttk, scrolledtext, 
+from tkinter import ttk, scrolledtext
 from tkinter import filedialog as fd
-
+from tkinter import END
+from tkinter import messagebox
 
 programma_in_esecuzione = False #stato del programma all'avvio
 
@@ -14,53 +15,74 @@ def aggiornamento_stato_led(color, text):
 
     led_canvas.itemconfig(led, fill=color)
     
-
     status_text = f"Stato: {text}"
     status_label.config(text=status_text)
-    
-
-    highlight_color = 'white' if color == 'green' else '#ffcccc'
-    led_canvas.itemconfig(led_highlight, fill=highlight_color)             #costante per l'aggiornamento del led
 
 def file_browse():
-    file = fd.askopenfilename(filetype=[("File Excel"), "*.xls *.xlsx"])
-    entry_file.delete(0, TK.END)
+    file = fd.askopenfilename(filetypes=[("Excel files", "*.xls *.xlsx")])
+    entry_file.delete(0, tk.END)
     entry_file.insert(0, file) #tasto per selezionare il file tramite explorer
 
 def aggiorna_excel():
     try:
-        file_path = entry_file.get() #richiesta di input daparte dell'utente, per il path(percorso) del file
+        file_path = entry_file.get()
         
-        excel = Dispatch("Excel.Application") #dichiaro una variabile di nome excel prendendo tramite win32com il processo di excel
-        excel.Visible = True #durante l'aggiornamento del programma, excel rimane aperto
-        wb = excel.Workbooks.Open(os.path.abspath(file_path))#variabile per salvare excel come workbook
+        if not os.path.exists(file_path):
+            messagebox.showerror("Errore", "Il file è stato rimosso durante l'esecuzione!")
+            interrompi_programma()
+            return
 
-        wb.Save() #salvataggio excel
-        log_message(f"File aperto aggiornato con successo alle {time.strftime('%H:%M:%S')}")#messaggio log di successo
+        excel = Dispatch("Excel.Application")
+        excel.Visible = True
+        wb = excel.Workbooks.Open(os.path.abspath(file_path))
+        wb.Save()
+        log_message(f"File aggiornato con successo alle {time.strftime('%H:%M:%S')}")
         
-    except Exception as e: #in caso di errore, esso viene salvato come e
-        log_message(f"Errore win32com: {str(e)}") #manda il mesaggio contenente l'errore #costante per aggiornare e tenere salvato excel
+    except Exception as e:
+        log_message(f"Errore durante l'aggiornamento: {str(e)}")
+        messagebox.showerror("Errore critico", f"Si è verificato un errore:\n{str(e)}")
+        interrompi_programma()
 
 def avvia_programma():
     global programma_in_esecuzione
     try:
-        tempo_aggiornamento = int(entry_tempo.get())
+        file_path = entry_file.get()
+        
+        if not file_path:
+            messagebox.showerror("Errore", "Inserisci un percorso file valido!")
+            return
+            
+        if not os.path.exists(file_path):
+            messagebox.showerror("Errore", "Il file specificato non esiste!")
+            log_message("Tentativo di avvio con file inesistente")
+            return
+            
+        if not file_path.lower().endswith(('.xlsx', '.xls')):
+            messagebox.showerror("Errore", "Il file deve essere un documento Excel!")
+            log_message("Tentativo di avvio con file non Excel")
+            return
+
+        tempo_aggiornamento = float(entry_tempo.get())
         schedule.every(tempo_aggiornamento).seconds.do(aggiorna_excel)
-        log_message(f"Programma avviato con aggiornamento ogni {tempo_aggiornamento} secondi.")
-        update_led_state('green', 'In esecuzione')
         programma_in_esecuzione = True
+        log_message(f"Programma avviato - Aggiornamento ogni {tempo_aggiornamento}s")
+        aggiornamento_stato_led('green', 'In esecuzione')
+        
     except ValueError:
-        log_message("Errore: inserisci un numero valido per il tempo di aggiornamento.") #costante per l'avvio del prgramma<
+        messagebox.showerror("Errore", "Inserisci un numero valido per l'intervallo!")
+        log_message("Valore temporale non valido inserito")
 
 def interrompi_programma():
     global programma_in_esecuzione
     if programma_in_esecuzione:
+        job = schedule.get_jobs()
+        job.clear()
         schedule.clear()  
         log_message("Programma interrotto.")
-        update_led_state('red', 'Fermo')
+        aggiornamento_stato_led('red', 'Fermo')
         programma_in_esecuzione = False
     else:
-        log_message("Nessun programma in esecuzione.") #costante per l'interruzione del programma
+        log_message("Nessun programma in esecuzione.") 
 
 def log_message(message):
     console_log.insert(tk.END, message + "\n")
@@ -70,7 +92,7 @@ def log_message(message):
 
 root = tk.Tk()
 root.title("Excel Updater")
-root.iconbitmap("icona.ico")
+root.iconbitmap("logo.ico")
 
 frame_input = ttk.Frame(root)
 frame_input.pack(padx=10, pady=10)
@@ -80,7 +102,7 @@ label_file.grid(row=0, column=0, sticky=tk.W)
 entry_file = ttk.Entry(frame_input, width=50)
 entry_file.grid(row=0, column=1, padx=5, pady=5)
 
-ttk.Button(frame_input, text="Sfoglia File", command=browse_file).grid(row=0, column=2, padx=5)
+ttk.Button(frame_input, text="Sfoglia File", command=file_browse).grid(row=0, column=2, padx=5)
 
 
 label_tempo = ttk.Label(frame_input, text="Tempo di aggiornamento (secondi):")
@@ -107,12 +129,11 @@ frame_status = ttk.Frame(root)
 frame_status.pack(pady=5)
 
 
-led_canvas = tk.Canvas(frame_status, width=30, height=30, bg='white', bd=0, highlightthickness=0)
+led_canvas = tk.Canvas(frame_status, width=30, height=30, bd=0, highlightthickness=0)
 led_canvas.grid(row=0, column=2, padx=5)
 
 
 led = led_canvas.create_oval(5, 5, 25, 25, fill='red', outline='')
-led_highlight = led_canvas.create_oval(8, 8, 18, 18, fill='white', alpha=0.3)
 
 
 status_label = ttk.Label(frame_status, text="Stato: Fermo")
@@ -125,7 +146,7 @@ def mainloop():
             schedule.run_pending()
             time.sleep(0.1)
         except KeyboardInterrupt:
-            log_message("Programma interrotto.")
+            log_message("Programma interrotto con successo")
             break
 
 if __name__ == "__main__":
